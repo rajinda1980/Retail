@@ -1,4 +1,4 @@
-package com.rajinda.retail.orderservice;
+package com.rajinda.retail.orderservice.service;
 
 import com.rajinda.retail.orderservice.advice.OrderException;
 import com.rajinda.retail.orderservice.dto.*;
