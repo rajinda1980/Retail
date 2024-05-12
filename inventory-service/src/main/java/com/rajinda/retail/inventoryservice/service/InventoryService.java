@@ -1,6 +1,7 @@
 package com.rajinda.retail.inventoryservice.service;
 
-import com.rajinda.retail.inventoryservice.ItemRepository;
+import com.rajinda.retail.inventoryservice.dto.InventoryResponseDto;
+import com.rajinda.retail.inventoryservice.repository.ItemRepository;
 import com.rajinda.retail.inventoryservice.advice.InventoryException;
 import com.rajinda.retail.inventoryservice.dto.ItemDto;
 import com.rajinda.retail.inventoryservice.dto.ItemResponseDto;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -59,6 +61,16 @@ public class InventoryService {
         return "Item is deleted";
     }
 
+    public List<InventoryResponseDto> findInventoryItem(List<String> codes) throws InventoryException {
+        List<Item> items =
+                itemRepository.findByCodeIn(codes);
+        if (items.size() > 0) {
+            return items.stream().map(this::mapInventoryResponseDto).toList();
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
     private Item mapItem(ItemDto itemDto) {
         return Item.builder()
                 .code(itemDto.getCode())
@@ -78,6 +90,13 @@ public class InventoryService {
                 .rol(item.getRol())
                 .createdDate(item.getCreatedDate())
                 .updatedDate(item.getUpdatedDate())
+                .build();
+    }
+
+    private InventoryResponseDto mapInventoryResponseDto(Item item) {
+        return InventoryResponseDto.builder()
+                .code(item.getCode())
+                .isInStock(item.getQty() > 0 ? Boolean.TRUE : Boolean.FALSE)
                 .build();
     }
 }

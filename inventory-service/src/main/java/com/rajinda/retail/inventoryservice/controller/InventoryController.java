@@ -1,6 +1,7 @@
 package com.rajinda.retail.inventoryservice.controller;
 
 import com.rajinda.retail.inventoryservice.advice.InventoryException;
+import com.rajinda.retail.inventoryservice.dto.InventoryResponseDto;
 import com.rajinda.retail.inventoryservice.dto.ItemDto;
 import com.rajinda.retail.inventoryservice.dto.ItemResponseDto;
 import com.rajinda.retail.inventoryservice.dto.ItemUpdateDto;
@@ -48,5 +49,11 @@ public class InventoryController {
     @ResponseStatus(HttpStatus.OK)
     public String deleteItem(@PathVariable Long did) throws InventoryException {
         return inventoryService.deleteITem(did);
+    }
+
+    @GetMapping("/isInStock")
+    @ResponseStatus(HttpStatus.OK)
+    public List<InventoryResponseDto> isInStock(@RequestParam List<String> codes) throws InventoryException {
+        return inventoryService.findInventoryItem(codes);
     }
 }
