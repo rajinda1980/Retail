@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,15 +25,38 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final WebClient.Builder webClientBuilder;
 
     @Transactional
     public OrderResponseDto createOder(OrderRequestDto requestDto) throws OrderException {
-        Order order = mapOrder(requestDto);
-        requestDto.getItems()
-                .forEach(it -> mapOrderItem(it, order));
 
-        orderRepository.save(order);
-        return mapOrderResponseDto(order);
+        List<String> codes = requestDto.getItems().stream().map(OrderItemDto::getItemId).toList();
+        if (null == codes) throw new OrderException("Order items are not available");
+
+        InventoryResponseDto[] invResponse =
+                    webClientBuilder.build()
+                            .get()
+                            .uri("http://localhost:8083/api/inventory/isInStock",
+                                    uriBuilder -> uriBuilder.queryParam("codes", codes).build())
+                            .retrieve()
+                            .bodyToMono(InventoryResponseDto[].class)
+                            .block();
+
+        boolean isInStock = false;
+        if (invResponse != null && codes.size() == invResponse.length) {
+            isInStock = Arrays.stream(invResponse).allMatch(InventoryResponseDto::isInStock);
+        }
+
+        if (isInStock) {
+            Order order = mapOrder(requestDto);
+            requestDto.getItems()
+                    .forEach(it -> mapOrderItem(it, order));
+
+            orderRepository.save(order);
+            return mapOrderResponseDto(order);
+        } else {
+            throw new OrderException("Items are not available in stock");
+        }
     }
 
     public OrderResponseDto updateOrder(OrderStatusDto orderStatusDto) throws OrderException {
