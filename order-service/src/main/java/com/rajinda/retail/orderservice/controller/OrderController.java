@@ -6,12 +6,16 @@ import com.rajinda.retail.orderservice.dto.OrderRequestDto;
 import com.rajinda.retail.orderservice.dto.OrderResponseDto;
 import com.rajinda.retail.orderservice.dto.OrderStatusDto;
 import com.rajinda.retail.orderservice.dto.OrdersDto;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @Slf4j
@@ -23,8 +27,15 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponseDto createOrder(@RequestBody OrderRequestDto orderRequestDto) throws OrderException {
-        return orderService.createOder(orderRequestDto);
+    @CircuitBreaker(name = "inventory", fallbackMethod = "orderFail")
+    @TimeLimiter(name = "inventory")
+    @Retry(name = "inventory")
+    public CompletableFuture<OrderResponseDto> createOrder(@RequestBody OrderRequestDto orderRequestDto) throws OrderException {
+        return CompletableFuture.supplyAsync(() -> orderService.createOder(orderRequestDto));
+    }
+
+    public CompletableFuture<OrderResponseDto> orderFail(OrderRequestDto orderRequestDto, Throwable exception) {
+        return CompletableFuture.supplyAsync(() -> OrderResponseDto.builder().build());
     }
 
     @PutMapping
