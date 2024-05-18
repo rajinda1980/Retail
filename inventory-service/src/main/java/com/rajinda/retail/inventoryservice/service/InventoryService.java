@@ -65,6 +65,7 @@ public class InventoryService {
         List<Item> items =
                 itemRepository.findByCodeIn(codes);
         if (items.size() > 0) {
+            log.info("Items found in inventory");
             return items.stream().map(this::mapInventoryResponseDto).toList();
         } else {
             return new ArrayList<>();

@@ -42,6 +42,7 @@ public class ProductService {
     public List<ProductResponse> findProducts() throws ProductException {
         try {
             List<Product> products = productRepository.findAll();
+            log.info("Total product count is {}", products.size());
             return products.stream()
                             .map(this::mapProductResponse)
                             .toList();

@@ -31,6 +31,7 @@ public class OrderController {
     @TimeLimiter(name = "inventory")
     @Retry(name = "inventory")
     public CompletableFuture<OrderResponseDto> createOrder(@RequestBody OrderRequestDto orderRequestDto) throws OrderException {
+        log.info("Receive create order request. Order ID : {}", orderRequestDto.getOrderId());
         return CompletableFuture.supplyAsync(() -> orderService.createOder(orderRequestDto));
     }
 
