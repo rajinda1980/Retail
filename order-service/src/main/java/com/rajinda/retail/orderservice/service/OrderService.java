@@ -33,6 +33,7 @@ public class OrderService {
         List<String> codes = requestDto.getItems().stream().map(OrderItemDto::getItemId).toList();
         if (null == codes) throw new OrderException("Order items are not available");
 
+        log.info("Check items in inventory for order {}", requestDto.getOrderId());
         InventoryResponseDto[] invResponse =
                     webClientBuilder.build()
                             .get()
@@ -48,13 +49,16 @@ public class OrderService {
         }
 
         if (isInStock) {
+            log.info("Order items available in inventory for order {}", requestDto.getOrderId());
             Order order = mapOrder(requestDto);
             requestDto.getItems()
                     .forEach(it -> mapOrderItem(it, order));
 
             orderRepository.save(order);
+            log.info("Order is successfully created. Order Id : {}", order.getOrderId());
             return mapOrderResponseDto(order);
         } else {
+            log.error("Cannot create order {} due to Unavailability of order items in inventory", requestDto.getOrderId());
             throw new OrderException("Items are not available in stock");
         }
     }

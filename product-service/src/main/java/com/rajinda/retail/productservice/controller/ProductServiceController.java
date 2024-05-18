@@ -33,6 +33,7 @@ public class ProductServiceController {
 
     @GetMapping
     public List<ProductResponse> findProducts() throws ProductException {
+        log.info("Find products");
         return productService.findProducts();
     }
 

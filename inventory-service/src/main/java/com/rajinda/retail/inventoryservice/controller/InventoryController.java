@@ -54,6 +54,7 @@ public class InventoryController {
     @GetMapping("/isInStock")
     @ResponseStatus(HttpStatus.OK)
     public List<InventoryResponseDto> isInStock(@RequestParam List<String> codes) throws InventoryException {
+        log.info("Check products in inventory. Codes: {}", codes);
         return inventoryService.findInventoryItem(codes);
     }
 }
